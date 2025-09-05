@@ -1,11 +1,3 @@
-
-# Simple WhatsApp Chat Analysis - No Sentiment Analysis
-# Complete code for Google Colab with basic chat statistics and visualizations
-
-# Install required packages
-
-
-# Import libraries
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,12 +11,7 @@ import warnings
 from collections import Counter
 warnings.filterwarnings('ignore')
 
-# Text processing
 from wordcloud import WordCloud
-
-# ============================================================================
-# 1. DATA PREPROCESSING
-# ============================================================================
 
 class WhatsAppChatProcessor:
     def __init__(self):
@@ -33,19 +20,14 @@ class WhatsAppChatProcessor:
     def detect_and_parse_format(self, raw_data):
         """Detect and parse different WhatsApp chat formats"""
 
-        # Format 1: [DD/MM/YY, HH:MM:SS] Contact Name: Message
         pattern1 = r'\[(\d{1,2}/\d{1,2}/\d{2,4}),\s(\d{1,2}:\d{2}:\d{2})\]\s([^:]+):\s(.+)'
 
-        # Format 2: DD/MM/YY, HH:MM:SS - Contact Name: Message
         pattern2 = r'(\d{1,2}/\d{1,2}/\d{2,4}),\s(\d{1,2}:\d{2}:\d{2})\s-\s([^:]+):\s(.+)'
 
-        # Format 3: DD/MM/YYYY, HH:MM - Contact Name: Message
         pattern3 = r'(\d{1,2}/\d{1,2}/\d{4}),\s(\d{1,2}:\d{2})\s-\s([^:]+):\s(.+)'
 
-        # Format 4: MM/DD/YY, HH:MM:SS AM/PM - Contact Name: Message
         pattern4 = r'(\d{1,2}/\d{1,2}/\d{2,4}),\s(\d{1,2}:\d{2}:\d{2}\s(?:AM|PM))\s-\s([^:]+):\s(.+)'
 
-        # Format 5: YYYY-MM-DD HH:MM:SS - Contact Name: Message
         pattern5 = r'(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2}:\d{2})\s-\s([^:]+):\s(.+)'
 
         patterns = [pattern1, pattern2, pattern3, pattern4, pattern5]
@@ -56,7 +38,6 @@ class WhatsAppChatProcessor:
                 print(f"✅ Detected format {i}: Found {len(matches)} messages")
                 return matches, i
 
-        # If no pattern matches, try a more flexible approach
         print("⚠️ Standard patterns failed. Trying flexible parsing...")
         return self.flexible_parse(raw_data)
 
@@ -70,7 +51,6 @@ class WhatsAppChatProcessor:
             if not line:
                 continue
 
-            # Look for any date-like pattern followed by name and message
             flexible_pattern = r'(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})[,\s]*(\d{1,2}:\d{2}(?::\d{2})?(?:\s?(?:AM|PM))?)[,\s\-\[\]]*([^:]+):\s*(.+)'
             match = re.match(flexible_pattern, line)
 
@@ -113,10 +93,8 @@ class WhatsAppChatProcessor:
             print("❌ File is empty!")
             return None
 
-        # Show sample format for debugging
         self.show_sample_format(file_path)
-
-        # Try to parse with different formats
+        
         matches, format_type = self.detect_and_parse_format(raw_data)
 
         if not matches:
@@ -128,14 +106,11 @@ class WhatsAppChatProcessor:
             print("4. Try exporting the chat again if the format looks incorrect")
             return None
 
-        # Create DataFrame
         df = pd.DataFrame(matches, columns=['Date', 'Time', 'Author', 'Message'])
 
-        # Clean author names (remove extra spaces, characters)
         df['Author'] = df['Author'].str.strip()
         df['Author'] = df['Author'].str.replace(r'[\[\]]', '', regex=True)
 
-        # Parse datetime based on format
         try:
             if format_type in [1, 2]:
                 df['DateTime'] = pd.to_datetime(df['Date'] + ' ' + df['Time'], errors='coerce')
@@ -152,9 +127,8 @@ class WhatsAppChatProcessor:
 
         # Clean the data
         df = df.dropna(subset=['DateTime'])
-        df = df[df['Message'].str.len() > 0]  # Remove empty messages
+        df = df[df['Message'].str.len() > 0] 
 
-        # Remove system messages
         system_messages = [
             'Messages and calls are end-to-end encrypted',
             'This message was deleted',
@@ -171,7 +145,6 @@ class WhatsAppChatProcessor:
         for sys_msg in system_messages:
             df = df[~df['Message'].str.contains(sys_msg, case=False, na=False)]
 
-        # Remove very short messages (likely system messages)
         df = df[df['Message'].str.len() > 2]
 
         self.df = df.reset_index(drop=True)
@@ -220,10 +193,6 @@ class WhatsAppChatProcessor:
         print("✅ Features added successfully!")
 
         return self.df
-
-# ============================================================================
-# 2. CHAT ANALYSIS AND STATISTICS
-# ============================================================================
 
 class WhatsAppChatAnalysis:
     def __init__(self, df):
@@ -402,14 +371,12 @@ class WhatsAppChatAnalysis:
     def generate_wordcloud(self):
         """Generate word cloud from all messages"""
         try:
-            # Combine all messages
             all_messages = ' '.join(self.df['Message'].astype(str))
 
             if len(all_messages.strip()) == 0:
                 print("No text available for word cloud")
                 return
 
-            # Basic stopwords (since we're not using NLTK)
             stop_words = {
                 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
                 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
@@ -419,7 +386,6 @@ class WhatsAppChatAnalysis:
                 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those'
             }
 
-            # Clean text
             cleaned_text = re.sub(r'[^a-zA-Z\s]', '', all_messages.lower())
 
             if len(cleaned_text.strip()) == 0:
@@ -497,7 +463,6 @@ class WhatsAppChatAnalysis:
                 axes[i].set_title(f'{author}', fontsize=14)
                 axes[i].axis('off')
 
-        # Hide unused subplots
         for i in range(len(authors), 4):
             axes[i].axis('off')
 
@@ -603,15 +568,10 @@ class WhatsAppChatAnalysis:
 
         return full_report
 
-# ============================================================================
-# 3. MAIN EXECUTION PIPELINE
-# ============================================================================
-
 def analyze_whatsapp_chat(file_path):
     """Main function to analyze WhatsApp chat"""
     print("🚀 Starting WhatsApp Chat Analysis...")
 
-    # 1. Load and preprocess data
     print("\n📊 Step 1: Loading and preprocessing data...")
     processor = WhatsAppChatProcessor()
     df = processor.load_chat(file_path)
@@ -622,7 +582,6 @@ def analyze_whatsapp_chat(file_path):
 
     df = processor.add_features()
 
-    # 2. Perform analysis
     print("\n📈 Step 2: Analyzing chat data...")
     analyzer = WhatsAppChatAnalysis(df)
 
@@ -667,10 +626,6 @@ def analyze_whatsapp_chat(file_path):
         'analyzer': analyzer
     }
 
-# ============================================================================
-# 4. INTERACTIVE FUNCTIONS
-# ============================================================================
-
 def get_chat_insights(df):
     """Get quick insights about the chat"""
     insights = []
@@ -714,10 +669,9 @@ def get_chat_insights(df):
 
 def search_messages(df, keyword, author=None):
     """Search for messages containing a keyword"""
-    # Filter by keyword
     filtered_df = df[df['Message'].str.contains(keyword, case=False, na=False)]
 
-    # Filter by author if specified
+    # Filter by author
     if author:
         filtered_df = filtered_df[filtered_df['Author'] == author]
 
@@ -763,14 +717,8 @@ def get_author_stats(df, author_name):
 
     return author_df
 
-# ============================================================================
-# 5. MAIN EXECUTION
-# ============================================================================
+file_path = "/content/r.txt"
 
-# Update the file path to your chat file
-file_path = "/content/r.txt"  # Change this to your file path
-
-# Run the complete analysis
 results = analyze_whatsapp_chat(file_path)
 
 if results:
@@ -782,7 +730,6 @@ if results:
     for insight in insights:
         print(insight)
 
-    # Example usage of interactive functions
     print("\n" + "="*60)
     print("🔧 INTERACTIVE FUNCTIONS AVAILABLE:")
     print("="*60)
@@ -793,7 +740,6 @@ if results:
     print("search_messages(df, 'hello')")
     print("get_author_stats(df, 'John')")  # Replace with actual author name
 
-    # Show available authors
     print(f"\nAvailable authors: {', '.join(df['Author'].unique())}")
 
 else:
