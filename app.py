@@ -4,6 +4,7 @@ import plotly.express as px
 import streamlit as st
 from whatsapp_analyzer import WhatsAppParser,ChatAnalytics
 from exporters import build_workbook,build_html,build_pdf
+from advanced import activity_anomalies,index_media_folder,answer_question
 st.set_page_config(page_title="WhatsApp Chat Intelligence",page_icon="💬",layout="wide")
 st.title("💬 WhatsApp Chat Intelligence")
 st.caption("Local-first analytics for exported WhatsApp conversations. Processing stays in this app session until you download a report.")
@@ -31,7 +32,7 @@ view=base.df[base.df.Author.isin(authors)]
 if isinstance(dr,tuple) and len(dr)==2: view=view[view.DateTime.dt.date.between(dr[0],dr[1])]
 a=ChatAnalytics(view); o=a.overview()
 for c,(label,key) in zip(st.columns(6),[("Messages","messages"),("Words","words"),("Participants","participants"),("Days","duration_days"),("Questions","questions"),("Links","links")]): c.metric(label,f"{o[key]:,}")
-t=st.tabs(["Overview","Participants","Conversations","Text & NLP","Search","Network","Export"])
+t=st.tabs(["Overview","Participants","Conversations","Text & NLP","Search","Network","Advanced","Export"])
 with t[0]:
     st.plotly_chart(px.line(a.daily_activity(),x="Date_Only",y="Messages",title="Messages over time"),use_container_width=True)
     c1,c2=st.columns(2); c1.plotly_chart(px.bar(a.hourly_activity(),title="Messages by hour"),use_container_width=True); c2.plotly_chart(px.bar(a.weekday_activity(),title="Messages by weekday"),use_container_width=True)
