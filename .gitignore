@@ -1,0 +1,1 @@
+__pycache__/\n.pytest_cache/\n.venv/\nvenv/\n.env\n.streamlit/secrets.toml\n*.pyc\n.DS_Store\n
